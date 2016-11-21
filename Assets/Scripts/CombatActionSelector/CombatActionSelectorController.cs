@@ -5,9 +5,10 @@ using System.Collections.Generic;
 public class CombatActionSelectorController : MonoBehaviour {
 
 	// populate this in editor for each human-controller combat character
-	public PlayerCombat combatant;
+	public PlayerInputCombat combatant;
 
 	// all possible combat actions and their icons
+	public GameObject actionIconHolder;
 	public CombatActionController cancel;
 	public CombatActionController attack;
 	public CombatActionController fullDefense;
@@ -15,12 +16,15 @@ public class CombatActionSelectorController : MonoBehaviour {
 	public CombatActionController useItem;
 	public CombatActionController endTurn;
 
+	// target selector object
+	public CombatTargetSelectorController targetSelector;
+
 	// dictionary indicating whether each action is available
 	private Dictionary<Vector2, CombatActionController> actions;
 	private Vector2 currentSelection;
 	private Helpers.CombatAction currentAction;
-
-	public bool axisInUse = false;
+	private bool isSelectingTarget = false;
+	private bool ignoreFirstClick = true;
 
 	// Use this for initialization
 	void Start () {
@@ -28,54 +32,35 @@ public class CombatActionSelectorController : MonoBehaviour {
 	
 	// Update is called once per frame
 	void Update () {
-		if (gameObject.activeSelf) {
-
-			// listen to cancel button
-			if (Input.GetButtonDown ("Fire2")) {
-				QuitSelector ();
-				return;
-			}
-
-			// listen to select action
-			if (Input.GetButtonDown ("Fire1")) {
-				ExecuteCurrentAction ();
-				return;
-			}
-
-			// listen to horizontal / vertical input
-			Vector2 dir = GetInput ();
-			if (dir.Equals (Vector2.zero)) {
-				return;
-			} else {
-				MoveHighlight (dir);
-				return;
-			}
-
-
-		}
-	}
-
-	private Vector2 GetInput () {
-		float fx = Input.GetAxis ("Horizontal");
-		float fy = Input.GetAxis ("Vertical");
-		if (Mathf.Abs(fx) > Mathf.Abs(fy)) {
-			fx = fx > 0f ? 1f : -1f;
-			fy = 0f;
-		} else if (Mathf.Abs(fy) > Mathf.Abs(fx))  {
-			fx = 0f;
-			fy = fy > 0f ? 1f : -1f;
+		if (!gameObject.activeSelf || isSelectingTarget) {
+			return;
 		}
 
-		if ((fx != 0f || fy != 0f) && !axisInUse) {
-			axisInUse = true;
-			return new Vector2 (fx, fy);
-		} 
-
-		if (fx == 0f && fy == 0f && axisInUse) {
-			axisInUse = false;
+		if (ignoreFirstClick) {
+			ignoreFirstClick = false;
+			return;
 		}
 
-		return Vector2.zero;
+		// listen to cancel button
+		if (Input.GetButtonDown ("Fire2")) {
+			QuitSelector ();
+			return;
+		}
+
+		// listen to select action
+		if (Input.GetButtonDown ("Fire1")) {
+			ActionSelected ();
+			return;
+		}
+
+		// listen to horizontal / vertical input
+		Vector2 dir = AxisButtonDownGetter.GetInput ();
+		if (dir.Equals (Vector2.zero)) {
+			return;
+		} else {
+			MoveHighlight (dir);
+			return;
+		}
 	}
 
 	private void MoveHighlight (Vector2 dir) {
@@ -90,23 +75,26 @@ public class CombatActionSelectorController : MonoBehaviour {
 		}
 	}
 
-	private void ExecuteCurrentAction () {
+	private void ActionSelected () {
 		// here need to call corresponding function on combatant delegate
 		// TODO: in case of attack, spell, item, need to also find out the target and the specific spell/item
 		if (currentAction == Helpers.CombatAction.Attack) {
-			combatant.Attack ();
+			StartTargetSelector (1, 0, true);
 		} else if (currentAction == Helpers.CombatAction.CastSpell) {
 
 		} else if (currentAction == Helpers.CombatAction.FullDefense) {
-
+			combatant.GoFullDefense ();
+			QuitSelector ();
 		} else if (currentAction == Helpers.CombatAction.UseItem) {
 
 		} else if (currentAction == Helpers.CombatAction.EndTurn) {
 			combatant.ForceEndTurn ();
+			QuitSelector ();
+		} else if (currentAction == Helpers.CombatAction.Cancel) {
+			QuitSelector ();
 		}
 
 		// disable the ActionSelector and tell Combatant it's not in menu any more
-		QuitSelector ();
 	}
 
 	private void QuitSelector () {
@@ -157,8 +145,35 @@ public class CombatActionSelectorController : MonoBehaviour {
 		currentAction = Helpers.CombatAction.Cancel;
 
 		// set self to active
-		gameObject.SetActive(true);
-
+		ignoreFirstClick = true;
+		gameObject.SetActive (true);
+		actionIconHolder.SetActive (true);
 	}
 
+	private void StartTargetSelector (int range, int aoe, bool targetRequired) {
+		isSelectingTarget = true;
+		actionIconHolder.SetActive (false);
+		targetSelector.Enable (range, aoe, targetRequired);
+	}
+
+	public void TargetSelectorCancelled () {
+		ignoreFirstClick = true;
+		actionIconHolder.SetActive (true);
+		isSelectingTarget = false;
+	}
+
+	public void TargetSelected (Vector3 target) {
+		Debug.Log ("Target selected: " + target);
+		isSelectingTarget = false;
+
+		if (currentAction == Helpers.CombatAction.Attack) {
+			combatant.Attack (target);
+		} else if (currentAction == Helpers.CombatAction.CastSpell) {
+
+		} else if (currentAction == Helpers.CombatAction.UseItem) {
+
+		}
+
+		QuitSelector ();
+	}
 }

@@ -78,6 +78,30 @@ public static class Helpers {
 	}
 
 	/**
+	 * Ruleset helpers
+	 */
+	public enum CharacterClass {
+		Fighter,
+		Cleric,
+		Rogue,
+		Monster
+	}
+
+	public enum CharacterSize {
+		Tiny = 2,
+		Small = 1,
+		Medium = 0,
+		Large = -1,
+		Huge = -2
+	}
+
+	public enum DamageType {
+		Physical,
+		Magic,
+		Fire
+	}
+
+	/**
 	 * Miscellaneous
 	 */
 	public class DescComparer<T> : IComparer<T> {
@@ -85,4 +109,5 @@ public static class Helpers {
 			return Comparer<T>.Default.Compare (y, x);
 		}
 	}
+
 }

@@ -20,7 +20,7 @@ public class CombatArea : MonoBehaviour {
 	public int numBlockingObjects = 0;
 
 	// the actual playing area
-	private Transform area;
+	public Transform area;
 	public List<Vector3> blockingObjects;
 
 	// Use this for initialization
@@ -39,8 +39,6 @@ public class CombatArea : MonoBehaviour {
 
 		// draw all elements of the combat
 		DrawArea ();
-		AddPlayers ();
-		AddEnemies ();
 		AddBlockingObjects ();
 	}
 
@@ -60,22 +58,6 @@ public class CombatArea : MonoBehaviour {
 				}
 			}
 		}
-	}
-
-	private void AddPlayers () {
-		string playerResource = GameManager.Instance().playerType + "Combat";
-		float xPos = 2;
-		float yPos = height / 2; 
-		GameObject player = Instantiate (Resources.Load(playerResource), new Vector3 (xPos, yPos, 0), Quaternion.identity) as GameObject;
-		player.transform.SetParent (area);
-	}
-
-	private void AddEnemies () {
-		string enemyResource = GameManager.Instance ().combat.enemyType + "Combat";
-		float xPos = width - 3;
-		float yPos = height / 2; 
-		GameObject enemy = Instantiate (Resources.Load(enemyResource), new Vector3 (xPos, yPos, 0), Quaternion.identity) as GameObject;
-		enemy.transform.SetParent (area);
 	}
 
 	private void CenterCamera () {

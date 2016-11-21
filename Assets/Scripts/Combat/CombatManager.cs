@@ -15,15 +15,15 @@ public class CombatManager : MonoBehaviour {
 	private SortedList<int, ICombatant> combatants;
 	private IEnumerator enumCombatants;
 
-	private Dictionary<ICombatant, Vector3> players;
-	public Dictionary<ICombatant, Vector3> Players {
+	private Dictionary<CharacterSheet, Vector3> players;
+	public Dictionary<CharacterSheet, Vector3> Players {
 		get {
 			return players;
 		}
 	}
 
-	private Dictionary<ICombatant, Vector3> enemies;
-	public Dictionary<ICombatant, Vector3> Enemies {
+	private Dictionary<CharacterSheet, Vector3> enemies;
+	public Dictionary<CharacterSheet, Vector3> Enemies {
 		get {
 			return enemies;
 		}
@@ -33,8 +33,8 @@ public class CombatManager : MonoBehaviour {
 
 	void Awake () {
 		combatants = new SortedList<int, ICombatant> (new Helpers.DescComparer<int> ());
-		players = new Dictionary<ICombatant, Vector3> ();
-		enemies = new Dictionary<ICombatant, Vector3> ();
+		players = new Dictionary<CharacterSheet, Vector3> ();
+		enemies = new Dictionary<CharacterSheet, Vector3> ();
 	}
 
 	void Start () {
@@ -42,7 +42,59 @@ public class CombatManager : MonoBehaviour {
 		players.Clear ();
 		enemies.Clear ();
 		area.SetupCombatArea (GameManager.Instance ().combat.groundType);
+
+		AddPlayer ();
+		AddEnemy ();
+
 		Invoke("Initiative", combatStartTime);
+	}
+
+	private void AddPlayer () {
+		string playerResource = GameManager.Instance().playerType + "Combat";
+		float xPos = 2;
+		float yPos = area.height / 2; 
+		GameObject player = Instantiate (Resources.Load(playerResource), new Vector3 (xPos, yPos, 0), Quaternion.identity) as GameObject;
+		player.transform.SetParent (area.area);
+
+		PlayerInputCombat pic = player.GetComponent<PlayerInputCombat> ();
+		CharacterSheet sheet = player.GetComponent<CharacterSheet> ();
+
+		int initiative = sheet.GetInitiativeModifier () + Helpers.RollD20 ();
+		combatants.Add (initiative, pic);
+
+		playerPortraits [players.Count].Enable ();
+		sheet.registerHitpointsDelegate (playerPortraits [players.Count].SetHitpointsLeft);
+		sheet.registerMovesLeftDelegate (playerPortraits [players.Count].SetMovesLeft);
+		sheet.registerAttacksLeftDelegate (playerPortraits [players.Count].SetAttacksLeft);
+		sheet.combatStatusChangedDelegate += CheckEndCombat;
+		pic.hasTurnChanged = playerPortraits [players.Count].SetHighlighted;
+		playerPortraits [players.Count].SetImage (Resources.Load<Sprite> (sheet.Portrait));
+
+		players.Add (sheet, player.transform.position);
+	}
+
+	private void AddEnemy () {
+		string enemyResource = GameManager.Instance ().combat.enemyType + "Combat";
+		float xPos = area.width - 3;
+		float yPos = area.height / 2; 
+		GameObject enemy = Instantiate (Resources.Load(enemyResource), new Vector3 (xPos, yPos, 0), Quaternion.identity) as GameObject;
+		enemy.transform.SetParent (area.area);
+
+		EnemyCombat ec = enemy.GetComponent<EnemyCombat> ();
+		CharacterSheet sheet = enemy.GetComponent<CharacterSheet> ();
+
+		int initiative = sheet.GetInitiativeModifier () + Helpers.RollD20 ();
+		combatants.Add (initiative, ec);
+
+		enemyPortraits [enemies.Count].Enable ();
+		sheet.registerHitpointsDelegate (enemyPortraits [enemies.Count].SetHitpointsLeft);
+		sheet.registerMovesLeftDelegate (enemyPortraits [enemies.Count].SetMovesLeft);
+		sheet.registerAttacksLeftDelegate (enemyPortraits [enemies.Count].SetAttacksLeft);
+		sheet.combatStatusChangedDelegate += CheckEndCombat;
+		ec.hasTurnChanged = enemyPortraits [enemies.Count].SetHighlighted;
+		enemyPortraits [enemies.Count].SetImage (Resources.Load<Sprite> (sheet.Portrait));
+
+		enemies.Add (sheet, enemy.transform.position);
 	}
 
 	private void Initiative () {
@@ -57,20 +109,6 @@ public class CombatManager : MonoBehaviour {
 		next.Value.GiveTurn ();
 	}
 
-	public void RegisterPlayer (ICombatant combatant, Vector3 gridPosition, out PortraitController portraitController) {
-		int initiative = combatant.GetInitiativeBonus () + Helpers.RollD20 ();
-		combatants.Add (initiative, combatant);
-		portraitController = playerPortraits [players.Count];
-		players.Add (combatant, gridPosition);
-	}
-
-	public void RegisterEnemy (ICombatant combatant, Vector3 gridPosition, out PortraitController portraitController) {
-		int initiative = combatant.GetInitiativeBonus () + Helpers.RollD20 ();
-		combatants.Add (initiative, combatant);
-		portraitController = enemyPortraits [enemies.Count];
-		enemies.Add (combatant, gridPosition);
-	}
-
 	public void EndTurn () {
 		if (!enumCombatants.MoveNext ()) {
 			enumCombatants = combatants.GetEnumerator();
@@ -82,25 +120,25 @@ public class CombatManager : MonoBehaviour {
 	}
 
 	public void CheckEndCombat () {
-		int playersAlive = players.Where (x => x.Key.GetCurrentState() == Helpers.CombatState.Alive).Count ();
-		int enemiesAlive = enemies.Where (x => x.Key.GetCurrentState() == Helpers.CombatState.Alive).Count ();
+		int playersAlive = players.Where (x => x.Key.GetCombatState() == Helpers.CombatState.Alive).Count ();
+		int enemiesAlive = enemies.Where (x => x.Key.GetCombatState() == Helpers.CombatState.Alive).Count ();
 
 		if (playersAlive == 0 || enemiesAlive == 0) {
 			Invoke("EndCombat", 1f);
 		}
 	}
 
-	public void MeleeAttack (ICombatant attacker, ICombatant target) {
+	public void MeleeAttack (CharacterSheet attacker, CharacterSheet target) {
 		int targetAC = target.GetArmorClass ();
 		int attackerToHit = attacker.GetToHitBonus () + Helpers.RollD20 ();
 
 		if (attackerToHit >= targetAC) {
-			int damage = attacker.GetDamageBonus () + Helpers.RollDice (attacker.GetDamageRoll ());
-			target.DealDamage (damage);
-			string logstring = "HIT: " + attacker.GetCombatTag () + " ToHit: " + attackerToHit + ", " + target.GetCombatTag () + " AC: " + targetAC + "\n" + "Damage: " + damage + '\n';
+			int damage = attacker.GetAttackDamage (false);
+			target.DealDamage (damage, Helpers.DamageType.Physical);
+			string logstring = "HIT: attacker ToHit: " + attackerToHit + ", defender AC: " + targetAC + "\n" + "Damage: " + damage + '\n';
 			LogToCombatLog (logstring);
 		} else {
-			string logstring = "MISS: " + attacker.GetCombatTag () + " ToHit: " + attackerToHit + ", " + target.GetCombatTag () + " AC: " + targetAC + '\n';
+			string logstring = "MISS: attacker ToHit: " + attackerToHit + ", defender AC: " + targetAC + '\n';
 			LogToCombatLog (logstring);
 		}
 	}
@@ -113,14 +151,14 @@ public class CombatManager : MonoBehaviour {
 		}
 
 		// check if it is taken by a player
-		foreach (KeyValuePair<ICombatant, Vector3> player in players) {
+		foreach (KeyValuePair<CharacterSheet, Vector3> player in players) {
 			if (player.Value.Equals (position)) {
 				return false;
 			}
 		}
 
 		// check if it is taken by a player
-		foreach (KeyValuePair<ICombatant, Vector3> enemy in enemies) {
+		foreach (KeyValuePair<CharacterSheet, Vector3> enemy in enemies) {
 			if (enemy.Value.Equals (position)) {
 				return false;
 			}
@@ -130,8 +168,8 @@ public class CombatManager : MonoBehaviour {
 		return true;
 	}
 
-	public ICombatant GetEnemyAtGridPosition (Vector3 position) {
-		foreach (KeyValuePair<ICombatant, Vector3> enemy in enemies) {
+	public CharacterSheet GetEnemyAtGridPosition (Vector3 position) {
+		foreach (KeyValuePair<CharacterSheet, Vector3> enemy in enemies) {
 			if (enemy.Value.Equals (position)) {
 				return enemy.Key;
 			}
@@ -140,8 +178,8 @@ public class CombatManager : MonoBehaviour {
 		return null;
 	}
 
-	public ICombatant GetPlayerAtGridPosition (Vector3 position) {
-		foreach (KeyValuePair<ICombatant, Vector3> player in players) {
+	public CharacterSheet GetPlayerAtGridPosition (Vector3 position) {
+		foreach (KeyValuePair<CharacterSheet, Vector3> player in players) {
 			if (player.Value.Equals (position)) {
 				return player.Key;
 			}

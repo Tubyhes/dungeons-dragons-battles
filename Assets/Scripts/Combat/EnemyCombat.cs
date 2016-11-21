@@ -7,7 +7,6 @@ using System.Collections.Generic;
 public class EnemyCombat : Enemy, ICombatant {
 
 	public float moveSpeed = 5f;
-	public Sprite portrait;
 
 	private bool isMoving;
 	private bool hasTurn;
@@ -17,37 +16,15 @@ public class EnemyCombat : Enemy, ICombatant {
 	private Vector3 target;
 
 	private CombatManager combatManager;
-	private PortraitController portraitController;
+	private CharacterSheet characterSheet;
 
-	private int movesLeft;
-	private int MovesLeft {
-		get {
-			return movesLeft;
-		}
-		set {
-			movesLeft = value;
-			portraitController.SetMovesLeft (movesLeft, maxMoves);
-		}
-	}
-	private int attacksLeft;
-	private int AttacksLeft {
-		get {
-			return attacksLeft;
-		}
-		set {
-			attacksLeft = value;
-			portraitController.SetAttacksLeft (attacksLeft, maxAttacks);
-		}
-	}
-	private int hpLeft;
-	private int HpLeft {
-		get {
-			return hpLeft;
-		}
-		set {
-			hpLeft = value;
-			portraitController.SetHitpointsLeft (hpLeft, maxHitPoints);
-		}
+	public delegate void HasTurnChanged (bool hasTurn);
+	public HasTurnChanged hasTurnChanged;
+
+	void Awake () {
+		characterSheet = GetComponent<CharacterSheet> ();
+		characterSheet.DogCharacterSheet ();
+		characterSheet.combatStatusChangedDelegate += CombatStatusChanged;
 	}
 
 	// Use this for initialization
@@ -59,16 +36,7 @@ public class EnemyCombat : Enemy, ICombatant {
 		isAttacking = false;
 		hasTarget = false;
 
-		// register self as combatant in this combat
 		combatManager = FindObjectOfType (typeof(CombatManager)) as CombatManager;
-		combatManager.RegisterEnemy (this, transform.position, out portraitController);
-
-		// populate the portrait
-		portraitController.Enable();
-		portraitController.SetImage (portrait);
-		MovesLeft = 0;
-		AttacksLeft = 0;
-		HpLeft = maxHitPoints;
 	}
 	
 	// Update is called once per frame
@@ -77,7 +45,7 @@ public class EnemyCombat : Enemy, ICombatant {
 			return;
 		}
 
-		if (MovesLeft == 0 && AttacksLeft == 0) {
+		if (characterSheet.MovesLeft == 0 && characterSheet.AttacksLeft == 0) {
 			EndTurn ();
 			return;
 		}
@@ -106,7 +74,7 @@ public class EnemyCombat : Enemy, ICombatant {
 	}
 
 	private Vector3 GridPosition () {
-		return combatManager.Enemies [this];
+		return combatManager.Enemies [characterSheet];
 	}
 
 	private Vector3 NextMove () {
@@ -159,9 +127,9 @@ public class EnemyCombat : Enemy, ICombatant {
 		float minDistance = float.MaxValue;
 		Vector3 here = GridPosition ();
 
-		foreach (KeyValuePair<ICombatant, Vector3> player in combatManager.Players) {
+		foreach (KeyValuePair<CharacterSheet, Vector3> player in combatManager.Players) {
 			float distance = Helpers.EditingDistance (here, player.Value);
-			if (distance < minDistance && player.Key.GetCurrentState() == Helpers.CombatState.Alive) {
+			if (distance < minDistance && player.Key.GetCombatState() == Helpers.CombatState.Alive) {
 				target = player.Value;
 				minDistance = distance;
 				hasTarget = true;
@@ -174,14 +142,14 @@ public class EnemyCombat : Enemy, ICombatant {
 	private void DoTurn () {
 		if (Helpers.EditingDistance(target, GridPosition()) == 1) {
 			// we are adjacent to the target location, time to attack!
-			if (AttacksLeft > 0) {
+			if (characterSheet.AttacksLeft > 0) {
 				// if we still have attacks left, then attack!
-				ICombatant player = combatManager.GetPlayerAtGridPosition (target);
-				combatManager.MeleeAttack (this, player);
-				AttacksLeft--;
+				CharacterSheet player = combatManager.GetPlayerAtGridPosition (target);
+				combatManager.MeleeAttack (characterSheet, player);
+				characterSheet.AttacksLeft--;
 				return;
 			}
-			if (AttacksLeft == 0) {
+			if (characterSheet.AttacksLeft == 0) {
 				// if we dont have attacks left, end the turn. no post combat movement for now
 				EndTurn ();
 				return;
@@ -197,13 +165,13 @@ public class EnemyCombat : Enemy, ICombatant {
 			}
 
 			// if it does, then we move there
-			if (MovesLeft == 0) {
-				MovesLeft += (maxMoves / maxAttacks);
-				AttacksLeft--;
+			if (characterSheet.MovesLeft == 0) {
+				characterSheet.MovesLeft += (characterSheet.Speed / characterSheet.NumAttacks);
+				characterSheet.AttacksLeft--;
 			}
-			MovesLeft--;
+			characterSheet.MovesLeft--;
 			isMoving = true;
-			combatManager.Enemies [this] = nextMove;
+			combatManager.Enemies [characterSheet] = nextMove;
 			StartCoroutine (SmoothMovement (nextMove));
 		}
 	}
@@ -211,8 +179,14 @@ public class EnemyCombat : Enemy, ICombatant {
 	private void EndTurn () {
 		hasTurn = false;
 		hasTarget = false;
-		portraitController.SetHighlighted (false);
+		hasTurnChanged (hasTurn);
 		combatManager.EndTurn ();
+	}
+
+	private void CombatStatusChanged () {
+		if (characterSheet.GetCombatState () != Helpers.CombatState.Alive) {
+			gameObject.SetActive (false);
+		}
 	}
 
 	private void StartAttacking () {
@@ -223,57 +197,19 @@ public class EnemyCombat : Enemy, ICombatant {
 	private void EndAttacking () {
 		isAttacking = false;
 	}
-
-	// Combatant interface implementation
-	public Helpers.CombatState GetCurrentState () {
-		if (HpLeft > 0) {
-			return Helpers.CombatState.Alive;
-		} else {
-			return Helpers.CombatState.Dead;
-		}
-	}
-
+		
 	public string GetCombatTag () {
 		return "Enemy1";
 	}
-
-	public int GetInitiativeBonus () {
-		return 2;
-	}
-
-	public int GetArmorClass() {
-		return 10;
-	}
-
-	public int GetToHitBonus() {
-		return 2;
-	}
-
-	public int GetDamageBonus() {
-		return 1;
-	}
-
-	public Helpers.DiceRoll GetDamageRoll () {
-		return new Helpers.DiceRoll { numDice = 1, sizeDice = 6 };
-	}
-
-	public void DealDamage (int dmg) {
-		HpLeft-=dmg;
-		if (HpLeft <= 0) {
-			Debug.Log ("Enemy Vanquished!");
-			gameObject.SetActive (false);
-			combatManager.CheckEndCombat ();
-		}
-	}
-		
+				
 	public void GiveTurn () {
-		if (GetCurrentState () != Helpers.CombatState.Alive) {
+		if (characterSheet.GetCombatState () != Helpers.CombatState.Alive) {
 			combatManager.EndTurn ();
 		}
-		portraitController.SetHighlighted (true);
 
-		MovesLeft = maxMoves;
-		AttacksLeft = maxAttacks;
+		characterSheet.MovesLeft = characterSheet.Speed;
+		characterSheet.AttacksLeft = characterSheet.NumAttacks;
 		hasTurn = true;
+		hasTurnChanged (hasTurn);
 	}
 }
