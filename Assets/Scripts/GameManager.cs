@@ -1,5 +1,6 @@
 ﻿using UnityEngine;
 using System.Collections;
+using System.Collections.Generic;
 
 public class GameManager {
 
@@ -14,8 +15,9 @@ public class GameManager {
 	// Persistent CombatSettings variable for next combat
 	public CombatSettings combat;
 
-	public string playerType;
+	public Dictionary<Helpers.Teams, List<string>> teamCombatants;
 
+	private bool hotSeat = true;
 	private bool isInteracting;
 	public bool IsInteracting {
 		get {
@@ -27,7 +29,20 @@ public class GameManager {
 	}
 
 	private GameManager () {
-		playerType = "PlayerKnight";
+		teamCombatants = new Dictionary<Helpers.Teams, List<string>> ();
+		teamCombatants [Helpers.Teams.Home] = new List<string> ();
+		teamCombatants [Helpers.Teams.Away] = new List<string> ();
+
+		teamCombatants [Helpers.Teams.Home].Add ("PlayerClericHome");
+		teamCombatants [Helpers.Teams.Home].Add ("PlayerMageHome");
+//		teamCombatants [Helpers.Teams.Home].Add ("PlayerKnightAway");
+//		teamCombatants [Helpers.Teams.Home].Add ("PlayerKnightHome");
+
+//		teamCombatants [Helpers.Teams.Away].Add (hotSeat ? "PlayerKnightAway" : "EnemyCombat");
+		teamCombatants [Helpers.Teams.Away].Add (hotSeat ? "PlayerKnightAway" : "EnemyCombat");
+//		teamCombatants [Helpers.Teams.Away].Add (hotSeat ? "PlayerKnightAway" : "EnemyCombat");
+//		teamCombatants [Helpers.Teams.Away].Add (hotSeat ? "PlayerKnightAway" : "EnemyCombat");
+
 		combat = new CombatSettings () { groundType = Helpers.GroundTypes.Grassland, enemyType = "Enemy" };
 	}
 

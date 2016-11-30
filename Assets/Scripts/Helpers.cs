@@ -77,6 +77,15 @@ public static class Helpers {
 		Cancel
 	}
 
+	public enum Teams {
+		Home,
+		Away
+	}
+
+	public static Helpers.Teams otherTeam (Helpers.Teams thisTeam) {
+		return thisTeam == Helpers.Teams.Home ? Helpers.Teams.Away : Helpers.Teams.Home;
+	}
+
 	/**
 	 * Ruleset helpers
 	 */
@@ -84,6 +93,7 @@ public static class Helpers {
 		Fighter,
 		Cleric,
 		Rogue,
+		Wizard,
 		Monster
 	}
 
@@ -110,4 +120,22 @@ public static class Helpers {
 		}
 	}
 
+	/**
+	 * Input axes helpers
+	 */
+	public static string Horizontal (Helpers.Teams team) {
+		return team == Helpers.Teams.Home ? "Horizontal_P1" : "Horizontal_P2";
+	}
+
+	public static string Vertical (Helpers.Teams team) {
+		return team == Helpers.Teams.Home ? "Vertical_P1" : "Vertical_P2";
+	}
+
+	public static string Fire1 (Helpers.Teams team) {
+		return team == Helpers.Teams.Home ? "Fire1_P1" : "Fire1_P2";
+	}
+
+	public static string Fire2 (Helpers.Teams team) {
+		return team == Helpers.Teams.Home ? "Fire2_P1" : "Fire2_P2";
+	}
 }
