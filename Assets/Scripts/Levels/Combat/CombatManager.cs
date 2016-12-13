@@ -11,6 +11,7 @@ public class CombatManager : MonoBehaviour {
 	public PortraitController[] homePortraits;
 	public PortraitController[] awayPortraits;
 	public CombatLogController combatLogController;
+	public bool testing = false;
 
 	private struct InitiativeCombatant {
 		public int initiative;
@@ -41,7 +42,6 @@ public class CombatManager : MonoBehaviour {
 		area.SetupCombatArea (GameManager.Instance ().combat.groundType);
 
 		StartCoroutine ("AddCombatants");
-
 	}
 
 	private IEnumerator AddCombatants () {
@@ -49,16 +49,20 @@ public class CombatManager : MonoBehaviour {
 		foreach (Helpers.Teams team in new List<Helpers.Teams> (){Helpers.Teams.Home, Helpers.Teams.Away}) {
 
 			// obtain the correct list of combatant types for this team
-			List<string> combatantTypes = GameManager.Instance ().teamCombatants [team];
+			if (testing) {
+				GameManager.Instance ().PopulateTeams ();
+			}
+			List<CharacterSheet> combatantSheets = GameManager.Instance ().teamCombatants [team];
 
 			// for each combatant in the list, spawn the correct object
-			foreach (string combatantType in combatantTypes) {
-				GameObject gameObject = SpawnCombatant (combatantType, team);
+			foreach (CharacterSheet sheet in combatantSheets) {
+				GameObject gameObject = SpawnCombatant (sheet.character_class, team);
 
 				// obtain references to the PlayerInputCombat and CharacterSheet components
 				Combatant combatant = gameObject.GetComponent<Combatant> ();
 				combatant.team = team;
-				CharacterSheet sheet = gameObject.GetComponent<CharacterSheet> ();
+				sheet.log = combatLogController;
+				combatant.SetCharacterSheet (sheet);
 
 				// roll initiative for player and add him to the list of combatants
 				int initiative = sheet.GetInitiativeModifier () + Helpers.RollD20 ();
@@ -83,13 +87,13 @@ public class CombatManager : MonoBehaviour {
 				sheet.registerAttacksLeftDelegate (portraits [index].SetAttacksLeft);
 				sheet.combatStatusChangedDelegate += CheckEndCombat;
 				combatant.hasTurnChanged = portraits [index].SetHighlighted;
-				portraits [index].SetImage (Resources.Load<Sprite> (sheet.portrait));
+				portraits [index].SetImage (Helpers.classPortraits[sheet.character_class]);
 
 				// add player to this team
 				teams [team].Add (sheet, gameObject.transform.position);
 
 				string teamString = team == Helpers.Teams.Home ? "Home" : "Away";
-				combatLogController.Log(sheet.Name + " joined the " + teamString + " team. Initiative: " + initiative); 
+				combatLogController.Log(sheet.character_name + " joined the " + teamString + " team. Initiative: " + initiative); 
 
 				yield return new WaitForSeconds (1.5f);
 			}
@@ -114,11 +118,12 @@ public class CombatManager : MonoBehaviour {
 		combatants.Insert (i, combatant);
 	}
 
-	private GameObject SpawnCombatant (string resource, Helpers.Teams team) {
+	private GameObject SpawnCombatant (Helpers.CharacterClass character_class, Helpers.Teams team) {
 		int count = teams [team].Count;
 		int xPos = team == Helpers.Teams.Home ? 2 : area.width - 3;
 		int yPos = area.height / 2 + (count % 2 == 1 ? -(count + 1) / 2 : (count + 1) / 2);
 
+		string resource = Helpers.classToString[character_class] + (team == Helpers.Teams.Home ? "Home" : "Away") + "Prefab";
 		GameObject combatant = Instantiate (Resources.Load(resource), new Vector3 (xPos, yPos, 0), Quaternion.identity) as GameObject;
 		combatant.transform.SetParent (area.area);
 
@@ -210,6 +215,17 @@ public class CombatManager : MonoBehaviour {
 		}
 
 		return null;
+	}
+
+	public bool IsCombatantInMelee (Vector3 position, Helpers.Teams team) {
+		foreach (KeyValuePair<CharacterSheet,Vector3> combatant in teams[Helpers.otherTeam(team)]) {
+			float distance = Mathf.Abs (position.x - combatant.Value.x) + Mathf.Abs (position.y - combatant.Value.y);
+			if (distance <= 1f) {
+				return true;
+			}
+		}
+
+		return false;
 	}
 
 	private void EndCombat () {

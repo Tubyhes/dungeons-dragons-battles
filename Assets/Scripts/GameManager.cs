@@ -15,8 +15,9 @@ public class GameManager {
 	// Persistent CombatSettings variable for next combat
 	public CombatSettings combat;
 
-	public Dictionary<Helpers.Teams, List<string>> teamCombatants;
+	public Dictionary<Helpers.Teams, List<CharacterSheet>> teamCombatants;
 
+	public int maxTeamSize = 3;
 	private bool hotSeat = true;
 	private bool isInteracting;
 	public bool IsInteracting {
@@ -29,19 +30,13 @@ public class GameManager {
 	}
 
 	private GameManager () {
-		teamCombatants = new Dictionary<Helpers.Teams, List<string>> ();
-		teamCombatants [Helpers.Teams.Home] = new List<string> ();
-		teamCombatants [Helpers.Teams.Away] = new List<string> ();
+		teamCombatants = new Dictionary<Helpers.Teams, List<CharacterSheet>> ();
+		teamCombatants [Helpers.Teams.Home] = new List<CharacterSheet> ();
+		teamCombatants [Helpers.Teams.Away] = new List<CharacterSheet> ();
 
-		teamCombatants [Helpers.Teams.Home].Add ("PlayerClericHome");
-		teamCombatants [Helpers.Teams.Home].Add ("PlayerMageHome");
-//		teamCombatants [Helpers.Teams.Home].Add ("PlayerKnightAway");
-//		teamCombatants [Helpers.Teams.Home].Add ("PlayerKnightHome");
-
-//		teamCombatants [Helpers.Teams.Away].Add (hotSeat ? "PlayerKnightAway" : "EnemyCombat");
-		teamCombatants [Helpers.Teams.Away].Add (hotSeat ? "PlayerKnightAway" : "EnemyCombat");
-//		teamCombatants [Helpers.Teams.Away].Add (hotSeat ? "PlayerKnightAway" : "EnemyCombat");
-//		teamCombatants [Helpers.Teams.Away].Add (hotSeat ? "PlayerKnightAway" : "EnemyCombat");
+		teamCombatants [Helpers.Teams.Away].Add (CharacterSheet.Cleric ());
+		teamCombatants [Helpers.Teams.Away].Add (CharacterSheet.Wizard ());
+		teamCombatants [Helpers.Teams.Away].Add (CharacterSheet.Fighter ());
 
 		combat = new CombatSettings () { groundType = Helpers.GroundTypes.Grassland, enemyType = "Enemy" };
 	}
@@ -55,5 +50,28 @@ public class GameManager {
 		}
 
 		return instance;
+	}
+
+	public bool AddPlayerToTeam (CharacterSheet character_sheet, Helpers.Teams team) {
+		teamCombatants [team].Add (character_sheet);
+		if (teamCombatants [team].Count == maxTeamSize &&
+		    teamCombatants [Helpers.otherTeam (team)].Count == maxTeamSize) {
+			return true;
+		} else {
+			return false;
+		}
+
+	}
+
+	public void PopulateTeams () {
+		teamCombatants [Helpers.Teams.Home].Clear ();
+		teamCombatants [Helpers.Teams.Home].Add (CharacterSheet.Rogue ());
+		teamCombatants [Helpers.Teams.Home].Add (CharacterSheet.Wizard ());
+		teamCombatants [Helpers.Teams.Home].Add (CharacterSheet.Fighter ());
+
+		teamCombatants [Helpers.Teams.Away].Clear ();
+		teamCombatants [Helpers.Teams.Away].Add (CharacterSheet.Rogue ());
+		teamCombatants [Helpers.Teams.Away].Add (CharacterSheet.Wizard ());
+		teamCombatants [Helpers.Teams.Away].Add (CharacterSheet.Fighter ());
 	}
 }

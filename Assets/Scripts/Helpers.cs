@@ -111,6 +111,32 @@ public static class Helpers {
 		Fire
 	}
 
+	public enum Feat {
+		CombatCasting,
+		Dodge,
+		GreatFortitude,
+		ImprovedCritical,
+		ImprovedInitiative,
+		ImprovedUnarmedStrike,
+		DeflectArrows,
+		IronWill,
+		LightningReflexes,
+		PointBlankShot,
+		PreciseShot,
+		RapidShot,
+		PowerAttack,
+		Cleave,
+		GreatCleave,
+		SpellFocus,
+		GreaterSpellFocus,
+		Toughness,
+		TwoWeaponFighting,
+		TwoWeaponDefense,
+		WeaponFinesse,
+		WeaponFocus,
+		WeaponSpecialization
+	}
+
 	/**
 	 * Miscellaneous
 	 */
@@ -138,4 +164,26 @@ public static class Helpers {
 	public static string Fire2 (Helpers.Teams team) {
 		return team == Helpers.Teams.Home ? "Fire2_P1" : "Fire2_P2";
 	}
+
+	public static Dictionary<CharacterClass, Sprite> classPortraits = new Dictionary<CharacterClass, Sprite> {
+		{ CharacterClass.Fighter, Resources.Load<Sprite> ("varian_wrynn") },
+		{ CharacterClass.Cleric, Resources.Load<Sprite> ("anduinn") },
+		{ CharacterClass.Rogue, Resources.Load<Sprite> ("edwin_van_cleef") },
+		{ CharacterClass.Wizard, Resources.Load<Sprite> ("antonidas") },
+	};
+
+	public static Dictionary<string, CharacterClass> stringToClass = new Dictionary<string, CharacterClass> {
+		{ "fighter", CharacterClass.Fighter },
+		{ "cleric", CharacterClass.Cleric },
+		{ "rogue", CharacterClass.Rogue },
+		{ "wizard", CharacterClass.Wizard },
+	};
+
+	public static Dictionary<CharacterClass, string> classToString = new Dictionary<CharacterClass, string> {
+		{ CharacterClass.Fighter, "fighter" },
+		{ CharacterClass.Cleric, "cleric" },
+		{ CharacterClass.Rogue, "rogue" },
+		{ CharacterClass.Wizard, "wizard" },
+	};
+
 }

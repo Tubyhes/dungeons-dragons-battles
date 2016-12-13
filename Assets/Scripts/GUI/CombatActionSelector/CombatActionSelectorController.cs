@@ -6,6 +6,8 @@ public class CombatActionSelectorController : MonoBehaviour {
 
 	// populate this in editor for each human-controller combat character
 	public PlayerInputCombat combatant;
+
+	[HideInInspector]
 	public CharacterSheet sheet;
 
 	// all possible combat actions and their icons

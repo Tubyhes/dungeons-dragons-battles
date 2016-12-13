@@ -10,11 +10,12 @@ public class BurningHands : Spell {
 		range = 2;
 		aoe = 2;
 		casterLvl = 1;
+		spellLvl = 1;
 		characterClasses = new [] { Helpers.CharacterClass.Wizard };
 	}
 
 	public override string DealDamage (CharacterSheet caster, CharacterSheet target) {
-		int x = Mathf.Min (caster.Level, 5);
+		int x = Mathf.Min (caster.level, 5);
 		int dmg = Helpers.RollDice (new Helpers.DiceRoll () { numDice = x, sizeDice = 4 });
 		target.DealDamage (dmg, Helpers.DamageType.Fire);
 		return "Burning Hands deals " + dmg + " damage.";

@@ -9,6 +9,7 @@ public abstract class Spell {
 	public int range;
 	public int aoe;
 	public int casterLvl;
+	public int spellLvl;
 	public Helpers.CharacterClass [] characterClasses;
 
 	public abstract string DealDamage (CharacterSheet caster, CharacterSheet target);

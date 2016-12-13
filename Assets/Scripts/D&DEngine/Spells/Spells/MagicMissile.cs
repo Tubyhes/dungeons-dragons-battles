@@ -10,11 +10,12 @@ public class MagicMissile : Spell {
 		range = 8;
 		aoe = 1;
 		casterLvl = 1;
+		spellLvl = 1;
 		characterClasses = new [] { Helpers.CharacterClass.Wizard };
 	}
 
 	public override string DealDamage (CharacterSheet caster, CharacterSheet target) {
-		int numMissiles = (caster.Level + 1) / 2;
+		int numMissiles = (caster.level + 1) / 2;
 		int dmg = Helpers.RollDice (new Helpers.DiceRoll () { numDice = numMissiles, sizeDice = 4 }) + numMissiles;
 		target.DealDamage (dmg, Helpers.DamageType.Magic);
 		return "Magic Missile deals " + dmg + " damage.";

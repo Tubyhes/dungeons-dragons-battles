@@ -2,108 +2,100 @@
 using System.Collections;
 using System.Collections.Generic;
 
-public class CharacterSheet : MonoBehaviour {
+public class CharacterSheet {
 
 	// reference to combat log
-	CombatLogController log;
+	public CombatLogController log;
 
 	// personalisation
-	private string character_name;
-	public string Name {
-		get {
-			return character_name;
-		}
-	}
-	public string portrait;
+	public string character_name;
 
 	// generic stuff
-	private int level;
-	public int Level {
-		get { return level;}
-	}
+	public int level;
 	public Helpers.CharacterClass character_class;
-	private Helpers.CharacterSize character_size;
+	public Helpers.CharacterSize character_size;
 
 	// primary abilities
-	private int strength;
-	private int dexterity;
-	private int constitution;
-	private int intelligence;
-	private int wisdom;
-	private int charisma;
+	public int strength;
+	public int dexterity;
+	public int constitution;
+	public int intelligence;
+	public int wisdom;
+	public int charisma;
 
 	// life
-	private int max_hitpoints;
-	public int MaxHitpoints {
-		get {
-			return max_hitpoints;
-		}
-	}
-	private int hit_die;
+	public int max_hitpoints;
+	public int hit_die;
 
 	// combat
-	private int base_attack;
-	private int speed;
-	public int Speed {
-		get {
-			return speed;
-		}
-	}
-	private int num_attacks;
-	public int NumAttacks {
-		get {
-			return num_attacks;
-		}
-	}
-	private int natural_armor;
+	public int base_attack;
+	public int speed;
+	public int num_attacks;
+	public int natural_armor;
+	public int num_spells;
 
 	// saves
-	private int fortitude;
-	private int reflex;
-	private int will;
+	public int fortitude;
+	public int reflex;
+	public int will;
 
 	// highly dynamic stats
-	private int hitpoints;
-	public int Hitpoints {
+	// TODO: cant assign self in setter, will cause endless loop.
+	private int _hitpoints;
+	public int hitpoints {
 		get {
-			return hitpoints;
+			return _hitpoints;
 		} 
 		set {
-			hitpoints = value;
+			_hitpoints = value;
 			if (hitpointsUpdatedDelegate != null) {
-				hitpointsUpdatedDelegate (hitpoints, max_hitpoints);
+				hitpointsUpdatedDelegate (_hitpoints, max_hitpoints);
 			}
 		}
 	}
-	private int moves_left;
-	public int MovesLeft {
+	private int _moves_left;
+	public int moves_left {
 		get {
-			return moves_left;
+			return _moves_left;
 		}
 		set {
-			moves_left = value;
+			_moves_left = value;
 			if (movesLeftUpdatedDelegate != null) {
-				movesLeftUpdatedDelegate (moves_left, speed);
+				movesLeftUpdatedDelegate (_moves_left, speed);
 			}
 		}
 	}
-	private int attacks_left;
-	public int AttacksLeft {
+	private int _attacks_left;
+	public int attacks_left {
 		get {
-			return attacks_left;
+			return _attacks_left;
 		}
 		set {
-			attacks_left = value;
+			_attacks_left = value;
 			if (attacksLeftUpdatedDelegate != null) {
-				attacksLeftUpdatedDelegate (attacks_left, num_attacks);
+				attacksLeftUpdatedDelegate (_attacks_left, num_attacks);
+			}
+		}
+	}
+	private int _spells_left;
+	public int spells_left {
+		get {
+			return _spells_left;
+		}
+		set {
+			_spells_left = value;
+			if (spellsLeftUpdatedDelegate != null) {
+				spellsLeftUpdatedDelegate (_spells_left, num_spells);
 			}
 		}
 	}
 
 	// equipment
-	private Weapon weapon;
-	private Armor armor; 
-	private Armor shield;
+	public Weapon weapon;
+	public Armor armor; 
+	public Armor shield;
+
+	public List<Helpers.Feat> feats;
 
 	// temporary effects
 	private List<CombatEffect> effects;
@@ -127,142 +119,149 @@ public class CharacterSheet : MonoBehaviour {
 		attacksLeftUpdatedDelegate += new_delegate;
 		new_delegate(attacks_left, num_attacks);
 	}
+	public delegate void SpellsLeftUpdatedDelegate (int spellsLeft, int maxSpells);
+	private SpellsLeftUpdatedDelegate spellsLeftUpdatedDelegate;
+	public void registerSpellsLeftDelegate (SpellsLeftUpdatedDelegate new_delegate) {
+		spellsLeftUpdatedDelegate += new_delegate;
+		new_delegate(spells_left, num_spells);
+	}
 	public delegate void CombatStatusChangedDelegate ();
 	public CombatStatusChangedDelegate combatStatusChangedDelegate;
 
-	public void InitCharacterSheet () {
-		if (character_class == Helpers.CharacterClass.Fighter) {
-			FighterCharacterSheet ();
-		} else if (character_class == Helpers.CharacterClass.Wizard) {
-			WizardCharacterSheet ();
-		} else if (character_class == Helpers.CharacterClass.Cleric) {
-			ClericCharacterSheet ();
-		} else if (character_class == Helpers.CharacterClass.Monster) {
-			DogCharacterSheet ();
+	public CharacterSheet () {
+		effects = new List<CombatEffect> ();
+		feats = new List<Helpers.Feat> ();
+		strength = 8;
+		dexterity = 8;
+		constitution = 8;
+		intelligence = 8;
+		wisdom = 8;
+		charisma = 8;
+	}
+
+	public static CharacterSheet NewCharacterSheet (Helpers.CharacterClass character_class) {
+		switch (character_class) {
+		case Helpers.CharacterClass.Fighter:
+			return Fighter ();
+		case Helpers.CharacterClass.Cleric:
+			return Cleric();
+		case Helpers.CharacterClass.Rogue:
+			return Rogue ();
+		case Helpers.CharacterClass.Wizard:
+			return Wizard ();
+		default:
+			return null;
 		}
 	}
 
 	// Two temporary bullshit initializers
-	private void FighterCharacterSheet () {
-		character_name =	"Barabas";
-		level = 			1;
-		character_size = 	Helpers.CharacterSize.Medium;
-		strength = 			16;
-		dexterity = 		12;
-		constitution = 		16;
-		intelligence = 		10;
-		wisdom = 			10;
-		charisma = 			12;
-		hit_die = 			10;
-		base_attack = 		1;
-		speed = 			4;
-		num_attacks = 		1;
-		natural_armor = 	0;
-		fortitude = 		2;
-		reflex = 			0;
-		will = 				0;
-		weapon = Weapon.LongSword ();
-		armor = Armor.Breastplate ();
-		shield = Armor.HeavyShield ();
-		CalcMaxHitpoints ();
-		Hitpoints = max_hitpoints;
-		MovesLeft = 0;
-		AttacksLeft = 0;
+	public static CharacterSheet Fighter () {
+		CharacterSheet sheet = new CharacterSheet ();
+		sheet.character_name =	"Barabas";
+		sheet.level = 			1;
+		sheet.character_size = 	Helpers.CharacterSize.Medium;
+		sheet.character_class = Helpers.CharacterClass.Fighter;
+		sheet.hit_die = 			10;
+		sheet.base_attack = 		1;
+		sheet.speed = 				4;
+		sheet.num_attacks = 		1;
+		sheet.natural_armor = 		0;
+		sheet.fortitude = 			2;
+		sheet.reflex = 				0;
+		sheet.will = 				0;
+		sheet.weapon = Weapon.LongSword ();
+		sheet.armor = Armor.Breastplate ();
+		sheet.shield = Armor.HeavyShield ();
+		sheet.CalcMaxHitpoints ();
+		sheet.hitpoints = sheet.max_hitpoints;
+		sheet.moves_left = 0;
+		sheet.attacks_left = 0;
+
+		return sheet;
 	}
 
-	private void WizardCharacterSheet () {
-		character_name =	"Piét";
-		level = 			1;
-		character_size = 	Helpers.CharacterSize.Medium;
-		strength = 			10;
-		dexterity = 		14;
-		constitution = 		14;
-		intelligence = 		18;
-		wisdom = 			12;
-		charisma = 			12;
-		hit_die = 			4;
-		base_attack = 		0;
-		speed = 			4;
-		num_attacks = 		1;
-		natural_armor = 	0;
-		fortitude = 		0;
-		reflex = 			0;
-		will = 				2;
-		weapon = Weapon.Quarterstaff ();
-		armor = Armor.None ();
-		shield = Armor.None ();
-		CalcMaxHitpoints ();
-		Hitpoints = max_hitpoints;
-		MovesLeft = 0;
-		AttacksLeft = 0;
+	public static CharacterSheet Wizard () {
+		CharacterSheet sheet = new CharacterSheet ();
+		sheet.character_name =	"Piét";
+		sheet.level = 			1;
+		sheet.character_size = 	Helpers.CharacterSize.Medium;
+		sheet.character_class = Helpers.CharacterClass.Wizard;
+		sheet.hit_die = 			4;
+		sheet.base_attack = 		0;
+		sheet.speed = 				4;
+		sheet.num_attacks = 		1;
+		sheet.natural_armor = 		0;
+		sheet.fortitude = 			0;
+		sheet.reflex = 				0;
+		sheet.will = 				2;
+		sheet.weapon = Weapon.Quarterstaff ();
+		sheet.armor = Armor.None ();
+		sheet.shield = Armor.None ();
+		sheet.CalcMaxHitpoints ();
+		sheet.CalcMaxSpells ();
+		sheet.hitpoints = sheet.max_hitpoints;
+		sheet.moves_left = 0;
+		sheet.attacks_left = 0;
+
+		return sheet;
 	}
 
-	private void ClericCharacterSheet () {
-		character_name =	"Lorisc";
-		level = 			1;
-		character_size = 	Helpers.CharacterSize.Medium;
-		strength = 			14;
-		dexterity = 		10;
-		constitution = 		14;
-		intelligence = 		10;
-		wisdom = 			16;
-		charisma = 			13;
-		hit_die = 			8;
-		base_attack = 		0;
-		speed = 			4;
-		num_attacks = 		1;
-		natural_armor = 	0;
-		fortitude = 		2;
-		reflex = 			0;
-		will = 				2;
-		weapon = Weapon.HeavyMace ();
-		armor = Armor.ChainShirt ();
-		shield = Armor.HeavyShield ();
-		CalcMaxHitpoints ();
-		Hitpoints = max_hitpoints;
-		MovesLeft = 0;
-		AttacksLeft = 0;
+	public static CharacterSheet Cleric () {
+		CharacterSheet sheet = new CharacterSheet ();
+		sheet.character_name =	"Lorisc";
+		sheet.level = 			1;
+		sheet.character_size = 	Helpers.CharacterSize.Medium;
+		sheet.character_class = Helpers.CharacterClass.Cleric;
+		sheet.hit_die = 			8;
+		sheet.base_attack = 		0;
+		sheet.speed = 				4;
+		sheet.num_attacks = 		1;
+		sheet.natural_armor = 		0;
+		sheet.fortitude = 			2;
+		sheet.reflex = 				0;
+		sheet.will = 				2;
+		sheet.weapon = Weapon.HeavyMace ();
+		sheet.armor = Armor.ChainShirt ();
+		sheet.shield = Armor.HeavyShield ();
+		sheet.CalcMaxHitpoints ();
+		sheet.CalcMaxSpells ();
+		sheet.hitpoints = sheet.max_hitpoints;
+		sheet.moves_left = 0;
+		sheet.attacks_left = 0;
+
+		return sheet;
 	}
 
-	private void DogCharacterSheet () {
-		character_name =	"Dog";
-		portrait = 			"acidic_swamp_ooze";
-		level = 			1;
-		character_class =	Helpers.CharacterClass.Monster;
-		character_size = 	Helpers.CharacterSize.Small;
-		strength = 			13;
-		dexterity = 		17;
-		constitution = 		15;
-		intelligence = 		2;
-		wisdom = 			12;
-		charisma = 			6;
-		hit_die = 			8;
-		base_attack = 		0;
-		speed = 			4;
-		num_attacks = 		1;
-		natural_armor = 	1;
-		fortitude = 		1;
-		reflex = 			2;
-		will = 				0;
-		weapon = Weapon.Bite ();
-		armor = Armor.None ();
-		shield = Armor.None ();
-		CalcMaxHitpoints ();
-		Hitpoints = max_hitpoints;
-		MovesLeft = 0;
-		AttacksLeft = 0;
+	public static CharacterSheet Rogue () {
+		CharacterSheet sheet = new CharacterSheet ();
+		sheet.character_name =	"Kalvin";
+		sheet.level = 			1;
+		sheet.character_size = 	Helpers.CharacterSize.Medium;
+		sheet.character_class = Helpers.CharacterClass.Rogue;
+		sheet.hit_die = 			6;
+		sheet.base_attack = 		0;
+		sheet.speed = 				4;
+		sheet.num_attacks = 		1;
+		sheet.natural_armor = 		0;
+		sheet.fortitude = 			0;
+		sheet.reflex = 				2;
+		sheet.will = 				0;
+		sheet.weapon = Weapon.ShortSword ();
+		sheet.armor = Armor.LeatherArmor ();
+		sheet.shield = Armor.None ();
+		sheet.CalcMaxHitpoints ();
+		sheet.hitpoints = sheet.max_hitpoints;
+		sheet.moves_left = 0;
+		sheet.attacks_left = 0;
+
+		return sheet;
 	}
 
-	void Start () {
-		// instantiate list of combat effects
-		effects = new List<CombatEffect> ();
-		log = FindObjectOfType (typeof(CombatLogController)) as CombatLogController;
-	}
 
 	/**
 	 * Setup methods
 	 */
-	private void CalcMaxHitpoints () {
+	public void CalcMaxHitpoints () {
 		max_hitpoints = 0;
 		if (character_class == Helpers.CharacterClass.Monster) {
 			max_hitpoints += Helpers.RollDice (new Helpers.DiceRoll{ numDice = 1, sizeDice = hit_die });
@@ -279,6 +278,19 @@ public class CharacterSheet : MonoBehaviour {
 
 		hitpoints = max_hitpoints;
 	}
+	public void CalcMaxSpells () {
+		num_spells = 0;
+
+		if (character_class == Helpers.CharacterClass.Cleric) {
+			num_spells = 2 + GetWisdomModifier () + (level - 1);
+		} 
+		if (character_class == Helpers.CharacterClass.Wizard) {
+			num_spells = 2 + GetIntelligenceModifier () + (level - 1);
+		}
+
+		spells_left = num_spells;
+	}
+
 
 	/**
 	 * Ability modifiers
@@ -303,6 +315,19 @@ public class CharacterSheet : MonoBehaviour {
 	}
 	public int GetCharsimaModifier () {
 		return AbilityModifier (charisma);
+	}
+
+	/**
+	 * Saves
+	 */
+	public int GetFortitude () {
+		return fortitude + GetConstitutionModifier ();
+	}
+	public int GetReflex () {
+		return reflex + GetDexterityModifier ();
+	}
+	public int GetWill () {
+		return will + GetWisdomModifier ();
 	}
 
 	/**
@@ -341,6 +366,13 @@ public class CharacterSheet : MonoBehaviour {
 	public int GetInitiativeModifier () {
 		return GetDexterityModifier ();
 	}
+	public int GetConcentrationModifier () {
+		int concentration = 3 + level + GetConstitutionModifier ();
+		if (feats.Contains (Helpers.Feat.CombatCasting)) {
+			concentration += 4;
+		}
+		return concentration;
+	}
 
 	/**
 	 * Hitpoint related stuff
@@ -352,7 +384,7 @@ public class CharacterSheet : MonoBehaviour {
 		return hitpoints;
 	}
 	public Helpers.CombatState GetCombatState () {
-		if (Hitpoints > 0) {
+		if (hitpoints > 0) {
 			return Helpers.CombatState.Alive;
 		} else {
 			return Helpers.CombatState.Dead;
@@ -360,15 +392,15 @@ public class CharacterSheet : MonoBehaviour {
 	}
 	public void DealDamage (int dmg, Helpers.DamageType dmgType) {
 		int hp_pre = hitpoints;
-		Hitpoints -= dmg;
-		if (hp_pre > 0 && Hitpoints <= 0) {
+		hitpoints -= dmg;
+		if (hp_pre > 0 && hitpoints <= 0) {
 			combatStatusChangedDelegate ();
 		}
 	}
 	public void DoHealing (int healing) {
 		int hp_pre = hitpoints;
-		Hitpoints = Mathf.Min (max_hitpoints, Hitpoints + healing);
-		if (hp_pre <= 0 && Hitpoints > 0) {
+		hitpoints = Mathf.Min (max_hitpoints, hitpoints + healing);
+		if (hp_pre <= 0 && hitpoints > 0) {
 			combatStatusChangedDelegate ();
 		}
 	}
@@ -398,7 +430,7 @@ public class CharacterSheet : MonoBehaviour {
 			Helpers.CharacterClass.Cleric
 		};
 		if (spellCasters.Contains (character_class)) {
-			if (attacks_left == num_attacks) {
+			if (attacks_left == num_attacks && spells_left > 0) {
 				return true;
 			} else {
 				return false;
@@ -464,5 +496,15 @@ public class CharacterSheet : MonoBehaviour {
 		if (d != "") { log.Log (d);	}
 		if (h != "") { log.Log (h); }
 		if (e != "") { log.Log (e); } 
+		spells_left--;
+	}
+
+	public bool ConcentrationCheck (Spell spell) {
+		int concentration = GetConcentrationModifier () + Helpers.RollD20 ();
+		if (concentration < 0 + spell.spellLvl) {
+			return false;
+		} else {
+			return true;
+		}
 	}
 }

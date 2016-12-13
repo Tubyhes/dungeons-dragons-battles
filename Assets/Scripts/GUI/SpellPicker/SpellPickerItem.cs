@@ -16,6 +16,7 @@ public class SpellPickerItem : MonoBehaviour {
 	public void SetSpell (Spell spell) {
 		spellTitle.text = spell.spellName;
 		spellDescription.text = spell.description;
+		spellIcon.sprite = Resources.Load<Sprite> (spell.icon);
 	}
 
 	public void SetHighlight (bool highlighted) {

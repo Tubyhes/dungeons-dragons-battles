@@ -10,6 +10,7 @@ public class CureLightWounds : Spell {
 		range = 1;
 		aoe = 1;
 		casterLvl = 1;
+		spellLvl = 1;
 		characterClasses = new [] { Helpers.CharacterClass.Cleric };
 	}
 
@@ -21,7 +22,7 @@ public class CureLightWounds : Spell {
 	}
 
 	public override string DoHealing (CharacterSheet caster, CharacterSheet target) {
-		int healing = Helpers.RollDice (roll) + Mathf.Max (caster.Level, maxLevelBonus);
+		int healing = Helpers.RollDice (roll) + Mathf.Max (caster.level, maxLevelBonus);
 		target.DoHealing (healing);
 		return "Cure Light Wounds heals for " + healing + ".";
 	}

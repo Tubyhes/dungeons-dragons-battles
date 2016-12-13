@@ -13,16 +13,17 @@ public class PlayerInputCombat : Combatant {
 
 	private CombatManager combatManager;
 	private PlayerMotionCombat pmc;
-	private CharacterSheet characterSheet;
 
 	private SoundManager soundManager;
 
 	void Awake () {
-		characterSheet = GetComponent<CharacterSheet> ();
-		characterSheet.InitCharacterSheet ();
-		characterSheet.combatStatusChangedDelegate += CombatStatusChanged;
-
 		soundManager = FindObjectOfType (typeof(SoundManager)) as SoundManager;
+	}
+
+	public override void SetCharacterSheet (CharacterSheet sheet) {
+		characterSheet = sheet;
+		characterSheet.combatStatusChangedDelegate += CombatStatusChanged;
+		actionSelector.sheet = sheet;
 	}
 
 	void Start () {
@@ -48,7 +49,7 @@ public class PlayerInputCombat : Combatant {
 			return;
 		}
 
-		if (characterSheet.MovesLeft == 0 && characterSheet.AttacksLeft == 0) {
+		if (characterSheet.moves_left == 0 && characterSheet.attacks_left == 0) {
 			EndTurn ();
 			return;
 		}
@@ -67,8 +68,8 @@ public class PlayerInputCombat : Combatant {
 	}
 
 	public void ForceEndTurn () {
-		characterSheet.MovesLeft = 0;
-		characterSheet.AttacksLeft = 0;
+		characterSheet.moves_left = 0;
+		characterSheet.attacks_left = 0;
 	}
 
 	private void EndTurn () {
@@ -82,7 +83,7 @@ public class PlayerInputCombat : Combatant {
 		isBusy = true;
 
 		CharacterSheet c = combatManager.GetCombatantAtGridPosition (target);
-		combatManager.combatLogController.Log (characterSheet.Name + " attacks " + c.Name + ".");
+		combatManager.combatLogController.Log (characterSheet.character_name + " attacks " + c.character_name + ".");
 
 		pmc.TurnTo (target);
 		pmc.StartAttackAnimation ();
@@ -95,7 +96,7 @@ public class PlayerInputCombat : Combatant {
 		bool isFlanking = combatManager.GetCombatantOfTeamAtGridPosition (flanker, team) != null;
 
 		characterSheet.MeleeAttack (c, isFlanking);
-		characterSheet.AttacksLeft--;
+		characterSheet.attacks_left--;
 
 		combatManager.combatLogController.Log ("\n");
 		isBusy = false;
@@ -104,25 +105,33 @@ public class PlayerInputCombat : Combatant {
 	public IEnumerator CastSpell (Spell spell, Vector3 target) {
 		isBusy = true;
 
-		CharacterSheet c = combatManager.GetCombatantAtGridPosition (target);
-		combatManager.combatLogController.Log (characterSheet.Name + " casts " + spell.spellName + " on " + c.Name + ".");
-
 		pmc.TurnTo (target);
 		pmc.StartAttackAnimation ();
 
-		yield return spell.PlayAnimation (transform.position, target);
+		bool inMelee = combatManager.IsCombatantInMelee (transform.position, team);
 
-		// TODO: find all enemies within the area of effect of the spell
-		characterSheet.CastSpell (c, spell);
-		characterSheet.AttacksLeft = 0;
+		if (inMelee && !characterSheet.ConcentrationCheck (spell)) {
+			// spell fizzles
+			combatManager.combatLogController.Log (characterSheet.character_name + " tries to cast " + spell.spellName + ", but it FIZZLES!");
+			yield return new WaitForSeconds(0.5f);
+			characterSheet.spells_left--;
+		} else {
+			CharacterSheet c = combatManager.GetCombatantAtGridPosition (target);
+			combatManager.combatLogController.Log (characterSheet.character_name + " casts " + spell.spellName + " on " + c.character_name + ".");
+			yield return spell.PlayAnimation (transform.position, target);
 
+			// TODO: find all enemies within the area of effect of the spell
+			characterSheet.CastSpell (c, spell);
+		}
+
+		characterSheet.attacks_left = 0;
 		combatManager.combatLogController.Log ("\n");
 		isBusy = false;
 	}
 
 	public void GoFullDefense () {
 		characterSheet.GoFullDefense ();
-		combatManager.combatLogController.Log (characterSheet.Name + " goes Full Defense (AC +4).\n");
+		combatManager.combatLogController.Log (characterSheet.character_name + " goes Full Defense (AC +4).\n");
 		ForceEndTurn ();
 	}
 
@@ -142,14 +151,18 @@ public class PlayerInputCombat : Combatant {
 			return false;
 		}
 
-		if (characterSheet.MovesLeft == 0) {
-			characterSheet.MovesLeft += (characterSheet.Speed / characterSheet.NumAttacks);
-			characterSheet.AttacksLeft--;
+		if (characterSheet.moves_left == 0) {
+			characterSheet.moves_left += (characterSheet.speed / characterSheet.num_attacks);
+			characterSheet.attacks_left--;
 		}
 
 		isBusy = true;
 
-		characterSheet.MovesLeft--;
+		if (combatManager.IsCombatantInMelee (transform.position, team)) {
+			characterSheet.moves_left = 0;
+		} else {
+			characterSheet.moves_left--;
+		}
 		combatManager.teams [team] [characterSheet] = target;
 		soundManager.PlayWalk ();
 		yield return StartCoroutine (pmc.MoveTo (target));
@@ -217,8 +230,8 @@ public class PlayerInputCombat : Combatant {
 			return;
 		}
 
-		characterSheet.MovesLeft = characterSheet.Speed; 
-		characterSheet.AttacksLeft = characterSheet.NumAttacks;
+		characterSheet.moves_left = characterSheet.speed; 
+		characterSheet.attacks_left = characterSheet.num_attacks;
 		hasTurn = true;
 		hasTurnChanged (hasTurn);
 		tileHighlight.SetActive (true);

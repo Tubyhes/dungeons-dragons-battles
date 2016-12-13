@@ -1,0 +1,23 @@
+fileFormatVersion: 2
+guid: feaed7f3705f08442bcd4e2d62f4db1a
+timeCreated: 1480610953
+licenseType: Free
+TrueTypeFontImporter:
+  serializedVersion: 4
+  fontSize: 16
+  forceTextureCase: -2
+  characterSpacing: 0
+  characterPadding: 1
+  includeFontData: 1
+  fontNames:
+  - TeX Gyre Bonum
+  fallbackFontReferences:
+  - {fileID: 12800000, guid: 4bd8f67707b38fd4bb9b8468993dd994, type: 3}
+  - {fileID: 12800000, guid: fad652e805357fd489463e5584e6efe3, type: 3}
+  - {fileID: 12800000, guid: f51e667e390ded44b9e2f03117bbb20e, type: 3}
+  customCharacters: 
+  fontRenderingMode: 0
+  ascentCalculationMode: 1
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 

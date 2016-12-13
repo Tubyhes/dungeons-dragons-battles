@@ -10,6 +10,6 @@ public class SplashScreen : MonoBehaviour {
 	}
 
 	private void LoadFirstLevel() {
-		SceneManager.LoadSceneAsync ("CombatArea", LoadSceneMode.Single);
+		SceneManager.LoadSceneAsync ("TeamSetup", LoadSceneMode.Single);
 	}
 }

@@ -11,4 +11,7 @@ public abstract class Combatant : MonoBehaviour {
 
 	public abstract string GetCombatTag ();
 	public abstract void GiveTurn ();
+
+	protected CharacterSheet characterSheet;
+	public abstract void SetCharacterSheet (CharacterSheet sheet);
 }

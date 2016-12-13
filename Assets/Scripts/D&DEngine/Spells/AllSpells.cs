@@ -12,7 +12,7 @@ public static class AllSpells  {
 	};
 
 	public static List<Spell> EligibleSpells (CharacterSheet sheet) {
-		List<Spell> eligibleSpells = spells.FindAll (x => x.casterLvl <= sheet.Level && x.characterClasses.Contains(sheet.character_class));
+		List<Spell> eligibleSpells = spells.FindAll (x => x.casterLvl <= sheet.level && x.characterClasses.Contains(sheet.character_class));
 		return eligibleSpells;
 	}
 }
