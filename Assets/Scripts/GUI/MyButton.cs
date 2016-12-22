@@ -31,4 +31,36 @@ public class MyButton : Button {
 
 		eventSystem.SetSelectedGameObject (gameObject);
 	}
+
+	public override void OnMove (AxisEventData eventData) {
+
+		Selectable next = null;
+		switch (eventData.moveDir) {
+		case MoveDirection.Down:
+			next = FindSelectableOnDown ();
+			break;
+		case MoveDirection.Up:
+			next = FindSelectableOnUp ();
+			break;
+		case MoveDirection.Left:
+			next = FindSelectableOnLeft ();
+			break;
+		case MoveDirection.Right:
+			next = FindSelectableOnRight ();
+			break;
+		default:
+			break;
+		}
+
+		// only process the move event if the next selectable is linked to the same event system
+		if (next != null) {
+			EventSystem es = next.gameObject.GetComponent<EventSystemProvider> ().eventSystem;
+			if (es != eventSystem) {
+				return;
+			}
+		}
+
+		base.OnMove (eventData);
+
+	}
 }

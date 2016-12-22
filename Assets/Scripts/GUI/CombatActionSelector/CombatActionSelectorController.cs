@@ -5,6 +5,7 @@ using System.Collections.Generic;
 public class CombatActionSelectorController : MonoBehaviour {
 
 	// populate this in editor for each human-controller combat character
+	[HideInInspector]
 	public PlayerInputCombat combatant;
 
 	[HideInInspector]

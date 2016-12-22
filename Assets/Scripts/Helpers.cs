@@ -12,6 +12,10 @@ public static class Helpers {
 		public int sizeDice;
 	}
 
+	public static string DiceRollToString (DiceRoll roll) {
+		return roll.numDice + "d" + roll.sizeDice;
+	}
+
 	public static int RollDice (DiceRoll roll) {
 		int total = 0;
 		for (int i = 0; i < roll.numDice; i++) {
@@ -109,32 +113,6 @@ public static class Helpers {
 		Physical,
 		Magic,
 		Fire
-	}
-
-	public enum Feat {
-		CombatCasting,
-		Dodge,
-		GreatFortitude,
-		ImprovedCritical,
-		ImprovedInitiative,
-		ImprovedUnarmedStrike,
-		DeflectArrows,
-		IronWill,
-		LightningReflexes,
-		PointBlankShot,
-		PreciseShot,
-		RapidShot,
-		PowerAttack,
-		Cleave,
-		GreatCleave,
-		SpellFocus,
-		GreaterSpellFocus,
-		Toughness,
-		TwoWeaponFighting,
-		TwoWeaponDefense,
-		WeaponFinesse,
-		WeaponFocus,
-		WeaponSpecialization
 	}
 
 	/**

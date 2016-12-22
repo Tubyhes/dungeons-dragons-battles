@@ -9,6 +9,9 @@ public static class AllSpells  {
 		new BurningHands (),
 		new CureLightWounds(),
 		new MagicMissile (),
+		new MageArmor (),
+		new Shield (),
+
 	};
 
 	public static List<Spell> EligibleSpells (CharacterSheet sheet) {

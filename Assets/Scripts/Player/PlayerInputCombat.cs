@@ -4,20 +4,23 @@ using System.Collections.Generic;
 
 public class PlayerInputCombat : Combatant {
 
-	public CombatActionSelectorController actionSelector;
 	public GameObject tileHighlight;
 
 	private bool hasTurn;
 	private bool isBusy;
 	private bool selectingAction;
+	private bool isEndingTurn;
 
 	private CombatManager combatManager;
 	private PlayerMotionCombat pmc;
+	private CombatActionSelectorController actionSelector;
 
 	private SoundManager soundManager;
 
 	void Awake () {
 		soundManager = FindObjectOfType (typeof(SoundManager)) as SoundManager;
+		actionSelector = Resources.Load ("CombatActionSelector") as CombatActionSelectorController;
+		actionSelector.combatant = this;
 	}
 
 	public override void SetCharacterSheet (CharacterSheet sheet) {
@@ -29,6 +32,7 @@ public class PlayerInputCombat : Combatant {
 	void Start () {
 		hasTurn = false;
 		isBusy = false;
+		isEndingTurn = false;
 
 		pmc = GetComponent<PlayerMotionCombat> ();
 		combatManager = FindObjectOfType (typeof(CombatManager)) as CombatManager;
@@ -49,13 +53,18 @@ public class PlayerInputCombat : Combatant {
 			return;
 		}
 
-		if (characterSheet.moves_left == 0 && characterSheet.attacks_left == 0) {
+		if (isEndingTurn) {
 			EndTurn ();
 			return;
 		}
 
 		if (Input.GetButtonDown (Helpers.Fire1(team))) {
 			OpenActionSelector ();
+			return;
+		}
+
+		// if player cant do anything anymore, dont listen for move input.
+		if (characterSheet.moves_left == 0 && characterSheet.attacks_left == 0) {
 			return;
 		}
 
@@ -70,10 +79,12 @@ public class PlayerInputCombat : Combatant {
 	public void ForceEndTurn () {
 		characterSheet.moves_left = 0;
 		characterSheet.attacks_left = 0;
+		isEndingTurn = true;
 	}
 
 	private void EndTurn () {
 		hasTurn = false;
+		isEndingTurn = false;
 		hasTurnChanged (false);
 		tileHighlight.SetActive (false);
 		combatManager.EndTurn ();
@@ -100,6 +111,8 @@ public class PlayerInputCombat : Combatant {
 
 		combatManager.combatLogController.Log ("\n");
 		isBusy = false;
+		tileHighlight.SetActive (true);
+
 	}
 
 	public IEnumerator CastSpell (Spell spell, Vector3 target) {
@@ -127,6 +140,8 @@ public class PlayerInputCombat : Combatant {
 		characterSheet.attacks_left = 0;
 		combatManager.combatLogController.Log ("\n");
 		isBusy = false;
+		tileHighlight.SetActive (true);
+
 	}
 
 	public void GoFullDefense () {
@@ -211,7 +226,9 @@ public class PlayerInputCombat : Combatant {
 
 	public void SelectorClosed () {
 		selectingAction = false;
-		tileHighlight.SetActive (true);
+		if (!isBusy) {
+			tileHighlight.SetActive (true);
+		}
 	}
 
 
@@ -223,19 +240,14 @@ public class PlayerInputCombat : Combatant {
 	}
 
 	public override void GiveTurn () {
-		characterSheet.UpdateCombatEffects ();
-
-		if (characterSheet.GetCombatState () != Helpers.CombatState.Alive) {
+		if (!characterSheet.TurnStart ()) {
 			combatManager.EndTurn ();
 			return;
+		} else {
+			hasTurn = true;
+			hasTurnChanged (hasTurn);
+			tileHighlight.SetActive (true);
 		}
-
-		characterSheet.moves_left = characterSheet.speed; 
-		characterSheet.attacks_left = characterSheet.num_attacks;
-		hasTurn = true;
-		hasTurnChanged (hasTurn);
-		tileHighlight.SetActive (true);
-
 	}
 
 }

@@ -3,6 +3,8 @@ using System.Collections;
 
 public class NPC : MonoBehaviour {
 
+	public SpriteRenderer sr;
+
 	public string name;
 	public TextAsset textFile;
 	public Sprite upSprite;

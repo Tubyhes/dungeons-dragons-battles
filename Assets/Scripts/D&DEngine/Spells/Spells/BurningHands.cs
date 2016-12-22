@@ -30,7 +30,12 @@ public class BurningHands : Spell {
 	}
 
 	public override Coroutine PlayAnimation (Vector3 origin, Vector3 target) {
-		return null;
+		SoundManager soundManager = GameObject.FindObjectOfType (typeof(SoundManager)) as SoundManager;
+		soundManager.PlayFire ();
+
+		GameObject fire = GameObject.Instantiate (Resources.Load ("Fire"), target, Quaternion.identity) as GameObject;
+		FireFX fx = fire.GetComponent<FireFX> ();
+		return fx.StartFX ();
 	}
 
 	public override Spell Duplicate () {

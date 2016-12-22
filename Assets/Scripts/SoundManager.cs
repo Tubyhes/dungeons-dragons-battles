@@ -4,21 +4,33 @@ using System.Collections;
 public class SoundManager : MonoBehaviour {
 
 	public AudioSource audioSource;
+
+	// gui sounds
 	public AudioClip menuOpen;
 	public AudioClip menuItemSwitch;
 	public AudioClip menuCancel;
 	public AudioClip menuItemSelect;
+
+	// combat sounds
 	public AudioClip attack;
-	public AudioClip magicMissile;
-	public AudioClip heal;
 	public AudioClip[] walk;
 	public AudioClip characterDeath;
+
+	// spell sounds
+	public AudioClip magicMissile;
+	public AudioClip fire;
+	public AudioClip heal;
+	public AudioClip bless;
+	public AudioClip shield;
+	public AudioClip fear;
 
 	// Use this for initialization
 	void Start () {
 	
 	}
-	
+
+
+	// GUI sounds
 	public void PlayMenuOpen () {
 		PlayClip (menuOpen);
 	}
@@ -35,16 +47,9 @@ public class SoundManager : MonoBehaviour {
 		PlayClip (menuItemSwitch);
 	}
 
+	// Combat sounds
 	public void PlayAttack () {
 		PlayClip (attack);
-	}
-
-	public void PlayMagicMissile () {
-		PlayClip (magicMissile);
-	}
-
-	public void PlayHeal () {
-		PlayClip (heal);
 	}
 
 	public void PlayWalk () {
@@ -54,6 +59,33 @@ public class SoundManager : MonoBehaviour {
 	public void PlayCharacterDeath () {
 		PlayClip (characterDeath);
 	}
+
+	// Spell sounds
+	public void PlayMagicMissile () {
+		PlayClip (magicMissile);
+	}
+
+	public void PlayFire () {
+		PlayClip (fire);
+	}
+
+	public void PlayShield () {
+		PlayClip (shield);
+	}
+
+	public void PlayBless () {
+		PlayClip (bless);
+	}
+
+	public void PlayHeal () {
+		PlayClip (heal);
+	}
+
+	public void PlayFear () {
+		PlayClip (fear);
+	}
+
+
 
 	private void PlayClip (AudioClip clip) {
 		audioSource.clip = clip;

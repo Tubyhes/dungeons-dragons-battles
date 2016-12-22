@@ -10,6 +10,7 @@ public class TeamSetupController : MonoBehaviour {
 
 	public GameObject classPicker;
 	public CharacterSheetController sheetController;
+	public FeatsEquipmentController featController;
 
 	public ClassButton fighterButton;
 	public ClassButton clericButton;
@@ -33,12 +34,15 @@ public class TeamSetupController : MonoBehaviour {
 
 		classPicker.SetActive (false);
 		sheetController.gameObject.SetActive (false);
+		featController.gameObject.SetActive (false);
 		classButtons = new Dictionary<Helpers.CharacterClass, ClassButton> {
 			{ Helpers.CharacterClass.Fighter, fighterButton },
 			{ Helpers.CharacterClass.Cleric, clericButton },
 			{ Helpers.CharacterClass.Rogue, rogueButton },
 			{ Helpers.CharacterClass.Wizard, wizardButton },
 		};
+
+//		featController.StartCustomization (CharacterSheet.Rogue ());
 	}
 
 	public void ClassPicked (string c) {
@@ -70,6 +74,12 @@ public class TeamSetupController : MonoBehaviour {
 
 	public void CharacterSheetFinished () {
 		CharacterSheet sheet = sheetController.sheet;
+		featController.StartCustomization (sheet);
+		sheetController.gameObject.SetActive (false);
+	}
+
+	public void FeatsEquipmentFinished () {
+		CharacterSheet sheet = featController.sheet;
 		bool teamsFull = gameManager.AddPlayerToTeam(sheet, team);
 
 		if (gameManager.teamCombatants [team].Count < gameManager.maxTeamSize) {
@@ -82,11 +92,11 @@ public class TeamSetupController : MonoBehaviour {
 				Invoke ("LoadCombatScene", 1f);
 			}
 		}
-
-		sheetController.gameObject.SetActive (false);
+		featController.gameObject.SetActive (false);
 	}
 
 	private void LoadCombatScene () {
 		SceneManager.LoadSceneAsync ("CombatArea", LoadSceneMode.Single);
 	}
+
 }

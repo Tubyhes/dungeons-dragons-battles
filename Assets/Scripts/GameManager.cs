@@ -34,10 +34,6 @@ public class GameManager {
 		teamCombatants [Helpers.Teams.Home] = new List<CharacterSheet> ();
 		teamCombatants [Helpers.Teams.Away] = new List<CharacterSheet> ();
 
-		teamCombatants [Helpers.Teams.Away].Add (CharacterSheet.Cleric ());
-		teamCombatants [Helpers.Teams.Away].Add (CharacterSheet.Wizard ());
-		teamCombatants [Helpers.Teams.Away].Add (CharacterSheet.Fighter ());
-
 		combat = new CombatSettings () { groundType = Helpers.GroundTypes.Grassland, enemyType = "Enemy" };
 	}
 
@@ -65,13 +61,13 @@ public class GameManager {
 
 	public void PopulateTeams () {
 		teamCombatants [Helpers.Teams.Home].Clear ();
-		teamCombatants [Helpers.Teams.Home].Add (CharacterSheet.Rogue ());
-		teamCombatants [Helpers.Teams.Home].Add (CharacterSheet.Wizard ());
-		teamCombatants [Helpers.Teams.Home].Add (CharacterSheet.Fighter ());
+		teamCombatants [Helpers.Teams.Home].Add (CharacterSheet.RogueReady ());
+		teamCombatants [Helpers.Teams.Home].Add (CharacterSheet.WizardReady ());
+		teamCombatants [Helpers.Teams.Home].Add (CharacterSheet.FighterReady ());
 
 		teamCombatants [Helpers.Teams.Away].Clear ();
-		teamCombatants [Helpers.Teams.Away].Add (CharacterSheet.Rogue ());
-		teamCombatants [Helpers.Teams.Away].Add (CharacterSheet.Wizard ());
-		teamCombatants [Helpers.Teams.Away].Add (CharacterSheet.Fighter ());
+		teamCombatants [Helpers.Teams.Away].Add (CharacterSheet.RogueReady ());
+		teamCombatants [Helpers.Teams.Away].Add (CharacterSheet.WizardReady ());
+		teamCombatants [Helpers.Teams.Away].Add (CharacterSheet.FighterReady ());
 	}
 }

@@ -11,6 +11,7 @@ public class CombatManager : MonoBehaviour {
 	public PortraitController[] homePortraits;
 	public PortraitController[] awayPortraits;
 	public CombatLogController combatLogController;
+	public SpriteRenderer sr;
 	public bool testing = false;
 
 	private struct InitiativeCombatant {
@@ -220,7 +221,7 @@ public class CombatManager : MonoBehaviour {
 	public bool IsCombatantInMelee (Vector3 position, Helpers.Teams team) {
 		foreach (KeyValuePair<CharacterSheet,Vector3> combatant in teams[Helpers.otherTeam(team)]) {
 			float distance = Mathf.Abs (position.x - combatant.Value.x) + Mathf.Abs (position.y - combatant.Value.y);
-			if (distance <= 1f) {
+			if (distance <= 1f && combatant.Key.GetCombatState () == Helpers.CombatState.Alive) {
 				return true;
 			}
 		}
